@@ -127,8 +127,8 @@ jobs:
       - name: Add Go bin to PATH
         run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
-      - name: Build Linux app
-        run: bash ./scripts/build-linux.sh --platform linux/amd64
+      - name: Build Linux app (webkit2_41)
+        run: bash ./scripts/build-linux.sh --platform linux/amd64 --tags webkit2_41
 
       - name: Collect release files
         id: files

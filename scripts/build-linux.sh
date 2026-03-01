@@ -3,6 +3,7 @@
 set -euo pipefail
 
 PLATFORM="linux/amd64"
+BUILD_TAGS=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -14,9 +15,17 @@ while [[ $# -gt 0 ]]; do
             PLATFORM="$2"
             shift 2
             ;;
+        --tags)
+            if [[ $# -lt 2 ]]; then
+                echo "Missing value for --tags" >&2
+                exit 1
+            fi
+            BUILD_TAGS="$2"
+            shift 2
+            ;;
         *)
             echo "Unknown argument: $1" >&2
-            echo "Usage: ./scripts/build-linux.sh [--platform linux/amd64]" >&2
+            echo "Usage: ./scripts/build-linux.sh [--platform linux/amd64] [--tags webkit2_41]" >&2
             exit 1
             ;;
     esac
@@ -44,7 +53,12 @@ fi
 pushd "$PROJECT_ROOT" > /dev/null
 trap 'popd > /dev/null' EXIT
 
-wails build --platform "$PLATFORM"
+buildArgs=(build --platform "$PLATFORM")
+if [[ -n "$BUILD_TAGS" ]]; then
+    buildArgs+=(-tags "$BUILD_TAGS")
+fi
+
+wails "${buildArgs[@]}"
 
 mkdir -p "$OUT_BUNDLE_DIR"
 cp -a "$BUNDLE_DIR/." "$OUT_BUNDLE_DIR/"
