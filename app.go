@@ -369,7 +369,10 @@ func (a *App) waitForExit(instanceID string) {
 		}
 	}
 
-	a.emit(eventInstanceUpdated, current.summary)
+	updatedSummary := current.summary
+	delete(a.instances, instanceID)
+
+	a.emit(eventInstanceUpdated, updatedSummary)
 }
 
 func (a *App) captureLogs(instanceID string, stream string, source io.ReadCloser) {
