@@ -45,7 +45,24 @@ jobs:
 
       - name: Install NSIS
         shell: pwsh
-        run: choco install nsis -y
+        run: choco install nsis -y --no-progress
+
+      - name: Ensure makensis is on PATH
+        shell: pwsh
+        run: |
+          $nsisDir = Join-Path ${env:ProgramFiles(x86)} "NSIS"
+          if (Test-Path $nsisDir) {
+            Add-Content -Path $env:GITHUB_PATH -Value $nsisDir
+          }
+
+      - name: Verify NSIS availability
+        shell: pwsh
+        run: |
+          $cmd = Get-Command makensis -ErrorAction SilentlyContinue
+          if (-not $cmd) {
+            throw "makensis not found on PATH after NSIS installation"
+          }
+          Write-Host "Using makensis at: $($cmd.Source)"
 
       - name: Build installer
         shell: pwsh
@@ -76,7 +93,7 @@ jobs:
             ${{ steps.files.outputs.checksum }}
 
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') && (github.event_name == 'push' || inputs.publish_release == true)
+        if: startsWith(github.ref, 'refs/tags/') && (github.event_name == 'push' || github.event.inputs.publish_release == 'true')
         uses: softprops/action-gh-release@v2
         with:
           files: |
