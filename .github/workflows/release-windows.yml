@@ -141,14 +141,12 @@ jobs:
             exit 1
           fi
 
-          artifact="build/bin/scrcpy-gui-linux-amd64.tar.gz"
+          mkdir -p dist
+          artifact="dist/scrcpy-gui-linux-amd64.tar.gz"
           tar -C build/bin -czf "$artifact" .
 
-          checksumFile="build/bin/SHA256SUMS-linux.txt"
-          (
-            cd build/bin
-            sha256sum "$(basename "$artifact")" > "$(basename "$checksumFile")"
-          )
+          checksumFile="dist/SHA256SUMS-linux.txt"
+          sha256sum "$artifact" > "$checksumFile"
 
           echo "artifact=$artifact" >> "$GITHUB_OUTPUT"
           echo "checksum=$checksumFile" >> "$GITHUB_OUTPUT"
