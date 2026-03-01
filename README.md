@@ -224,3 +224,9 @@ Key paths:
 ## Local Reference Docs
 
 See `scrcpy-docs/` for topic-specific notes (audio, video, input, recording, etc.) used while shaping option support.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
