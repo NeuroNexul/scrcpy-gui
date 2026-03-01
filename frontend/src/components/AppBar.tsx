@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { Copy, Minus, Square, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import Logo from "@/components/icons/logo";
+
 import {
   Quit,
   WindowIsMaximised,
@@ -46,36 +50,45 @@ function AppBar({ title }: AppBarProps) {
       onDoubleClick={handleToggleMaximise}
     >
       <div className="w-full h-full flex items-center justify-between">
-        <div className="w-36" />
+        {/* <div className="w-36" /> */}
 
-        <div className="text-sm font-medium truncate px-2">{title}</div>
+        <div className="text-sm font-medium truncate px-2">
+          <Logo className="h-4 w-4 mr-2 inline" />
+          {title}
+          </div>
 
-        <div className="no-drag h-full flex items-stretch">
-          <button
+        <ButtonGroup className="no-drag h-full">
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             aria-label="Minimize"
-            className="w-12 h-full inline-flex items-center justify-center text-base rounded-r hover:bg-slate-700 transition-colors"
+            className="h-full w-12 rounded-none cursor-pointer border-0 shadow-none hover:bg-secondary"
             onClick={WindowMinimise}
           >
             <Minus size={14} strokeWidth={2} />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             aria-label={maximised ? "Restore" : "Maximize"}
-            className="w-12 h-full inline-flex items-center justify-center text-sm hover:bg-slate-700 transition-colors"
+            className="h-full w-12 rounded-none cursor-pointer border-0 shadow-none hover:bg-secondary"
             onClick={handleToggleMaximise}
           >
             {maximised ? <Copy size={12} strokeWidth={2} /> : <Square size={12} strokeWidth={2} />}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             aria-label="Close"
-            className="w-12 h-full inline-flex items-center justify-center text-base hover:bg-red-600 transition-colors"
+            className="h-full w-12 rounded-none cursor-pointer border-0 shadow-none hover:bg-destructive! hover:text-destructive-foreground!"
             onClick={Quit}
           >
             <X size={14} strokeWidth={2} />
-          </button>
-        </div>
+          </Button>
+        </ButtonGroup>
       </div>
     </header>
   );
