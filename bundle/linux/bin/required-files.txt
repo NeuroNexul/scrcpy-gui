@@ -1,0 +1,4 @@
+# Additional Linux runtime files required by your scrcpy distribution.
+#
+# `scrcpy` and `adb` are always required automatically.
+# Add one file per line for stricter bundle health validation.

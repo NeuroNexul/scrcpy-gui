@@ -1,6 +1,6 @@
 # scrcpy-gui
 
-Windows-first desktop GUI for [scrcpy](https://github.com/Genymobile/scrcpy), built with Wails (Go backend + React frontend).
+Desktop GUI for [scrcpy](https://github.com/Genymobile/scrcpy), built with Wails (Go backend + React frontend), with Windows and Linux runtime support.
 
 ![App Screenshot](./frontend/src/assets/405_1x_shots_so.jpeg)
 
@@ -21,6 +21,7 @@ This app focuses on a practical workflow:
 - **Multi-instance sessions** (start/stop individual or stop all)
 - **Live stdout/stderr logs** with bounded in-memory history
 - **Structured launch options** for display/camera/audio/window/input/recording/diagnostics
+- **Platform-aware runtime bundle checks** for Windows and Linux
 - **Windows packaging path** with bundled binaries and NSIS installer support
 
 ---
@@ -40,7 +41,9 @@ Install these tools before development:
 1. **Go 1.23+**
 2. **Wails CLI v2**
 3. **Bun** (used by this repo for frontend install/build in `wails.json`)
-4. **Windows + WebView2 runtime** (normally present on modern Windows; installer can bootstrap if needed)
+4. **Desktop runtime prerequisites**
+	- Windows: WebView2 runtime (normally present on modern Windows; installer can bootstrap if needed)
+	- Linux: GTK/WebKit dependencies required by Wails WebView
 
 For device interaction:
 
@@ -55,16 +58,16 @@ The app is designed to ship `scrcpy` and `adb` with the build output/installer.
 
 Put runtime files in:
 
-- `bundle/windows/bin/`
+- `bundle/<os>/bin/` (`<os>` is `windows` or `linux`)
 
 Required baseline files:
 
-- `scrcpy.exe`
-- `adb.exe`
+- Windows: `scrcpy.exe`, `adb.exe`
+- Linux: `scrcpy`, `adb`
 
 Additional required files are defined in:
 
-- `bundle/windows/bin/required-files.txt`
+- `bundle/<os>/bin/required-files.txt`
 
 Current manifest includes:
 
@@ -109,6 +112,22 @@ Use the provided script to ensure bundled files are copied correctly.
 ./scripts/build-windows.ps1 -NSIS
 ```
 
+## Building for Linux
+
+Use the provided script to ensure Linux bundled files are copied correctly.
+
+### Standard app build
+
+```bash
+./scripts/build-linux.sh
+```
+
+### Custom Linux platform build
+
+```bash
+./scripts/build-linux.sh --platform linux/arm64
+```
+
 ## GitHub Actions Release (No Per-Commit Runs)
 
 This repository includes a release workflow at [.github/workflows/release-windows.yml](.github/workflows/release-windows.yml).
@@ -133,6 +152,12 @@ What the script does:
 2. Runs `wails build --platform windows/amd64` (plus `--nsis` when requested)
 3. Copies `bundle/windows/bin/*` to `build/bin/bin/`
 
+Linux build script behavior (`scripts/build-linux.sh`):
+
+1. Validates `bundle/linux/bin/scrcpy` and `bundle/linux/bin/adb`
+2. Runs `wails build --platform linux/amd64` (or custom value from `--platform`)
+3. Copies `bundle/linux/bin/*` to `build/bin/bin/`
+
 Installer behavior (`build/windows/installer/project.nsi`):
 
 - copies app files
@@ -150,10 +175,10 @@ Backend executable discovery checks these locations first, then falls back to `P
 4. Current working directory
 5. `<cwd>/bin`
 6. `<cwd>/build/bin`
-7. `<cwd>/bundle/windows/bin`
+7. `<cwd>/bundle/<runtime-os>/bin`
 8. System `PATH`
 
-At launch, the backend also prepends the resolved `adb.exe` directory to `PATH` for the scrcpy process.
+At launch, the backend also prepends the resolved `adb` directory to `PATH` for the scrcpy process.
 
 ---
 
@@ -197,8 +222,10 @@ Key paths:
 - `launch_options.go` – typed launch options + argument builder
 - `frontend/src/App.tsx` – main desktop UI shell
 - `frontend/src/features/launch/` – launch option models and panel
-- `bundle/windows/bin/` – bundled runtime files for packaging
+- `bundle/windows/bin/` – bundled Windows runtime files
+- `bundle/linux/bin/` – bundled Linux runtime files
 - `scripts/build-windows.ps1` – repeatable Windows build script
+- `scripts/build-linux.sh` – repeatable Linux build script
 - `scrcpy-docs/` – local reference notes for scrcpy capabilities
 
 ---
@@ -207,15 +234,15 @@ Key paths:
 
 ### `scrcpy: missing` or `adb: missing`
 
-- Place binaries in `bundle/windows/bin/` (for packaged flow), or
+- Place binaries in `bundle/<runtime-os>/bin/` (for packaged flow), or
 - ensure they are available in one of the discovery paths or system `PATH`
 - click **Refresh** in app
 
 ### `bundle: issues`
 
-- Open `bundle/windows/bin/required-files.txt`
+- Open `bundle/<runtime-os>/bin/required-files.txt`
 - add/correct required runtime files from your scrcpy distribution
-- ensure files exist in `bundle/windows/bin/`
+- ensure files exist in `bundle/<runtime-os>/bin/`
 
 ### No devices found
 
@@ -233,7 +260,7 @@ Key paths:
 
 ## Notes
 
-- Current implementation is **Windows-first**.
+- Current implementation supports runtime launch on **Windows and Linux**.
 - The repository includes a generated `wailsjs` bridge for Go↔TS calls.
 - Frontend package metadata requires a modern Node runtime, but this project uses **Bun** for Wails frontend tasks.
 

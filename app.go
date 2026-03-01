@@ -426,8 +426,8 @@ func detectSystemStatus() SystemStatus {
 		Platform: runtime.GOOS,
 	}
 
-	scrcpyPath := findExecutable([]string{"scrcpy.exe", "scrcpy"})
-	adbPath := findExecutable([]string{"adb.exe", "adb"})
+	scrcpyPath := findExecutable(executableCandidates("scrcpy"))
+	adbPath := findExecutable(executableCandidates("adb"))
 
 	if scrcpyPath != "" {
 		status.ScrcpyFound = true
@@ -440,10 +440,28 @@ func detectSystemStatus() SystemStatus {
 	}
 
 	if !status.ScrcpyFound || !status.AdbFound {
-		status.InstallHint = "Bundle scrcpy and adb in bundle/windows/bin for builds (or bin next to the executable), then package with scripts/build-windows.ps1."
+		status.InstallHint = installHintForPlatform()
 	}
 
 	return status
+}
+
+func executableCandidates(baseName string) []string {
+	if runtime.GOOS == "windows" {
+		return []string{baseName + ".exe", baseName}
+	}
+
+	return []string{baseName, baseName + ".exe"}
+}
+
+func installHintForPlatform() string {
+	bundlePath := filepath.ToSlash(filepath.Join("bundle", runtime.GOOS, "bin"))
+
+	if runtime.GOOS == "windows" {
+		return "Bundle scrcpy and adb in " + bundlePath + " for builds (or bin next to the executable), then package with scripts/build-windows.ps1."
+	}
+
+	return "Bundle scrcpy and adb in " + bundlePath + " for builds (or bin next to the executable), or make them available on PATH."
 }
 
 func findExecutable(candidates []string) string {
@@ -463,7 +481,7 @@ func findExecutable(candidates []string) string {
 			workingDir,
 			filepath.Join(workingDir, "bin"),
 			filepath.Join(workingDir, "build", "bin"),
-			filepath.Join(workingDir, "bundle", "windows", "bin"),
+			filepath.Join(workingDir, "bundle", runtime.GOOS, "bin"),
 		)
 	}
 
@@ -674,7 +692,7 @@ func resolveBundleDirectory(status SystemStatus) string {
 
 	if workingDir, err := os.Getwd(); err == nil {
 		candidates = append(candidates,
-			filepath.Join(workingDir, "bundle", "windows", "bin"),
+			filepath.Join(workingDir, "bundle", runtime.GOOS, "bin"),
 			filepath.Join(workingDir, "build", "bin", "bin"),
 			filepath.Join(workingDir, "bin"),
 		)
@@ -700,7 +718,8 @@ func resolveBundleDirectory(status SystemStatus) string {
 }
 
 func readRequiredBundleFiles(bundleDir string) []string {
-	files := []string{"scrcpy.exe", "adb.exe"}
+	files := executableCandidates("scrcpy")
+	files = append(files, executableCandidates("adb")...)
 
 	manifestPath := filepath.Join(bundleDir, "required-files.txt")
 	content, err := os.ReadFile(manifestPath)

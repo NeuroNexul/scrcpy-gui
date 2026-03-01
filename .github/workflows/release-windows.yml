@@ -1,4 +1,4 @@
-name: Release Windows
+name: Release Windows and Linux
 
 on:
   push:
@@ -16,7 +16,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
 
     steps:
@@ -77,7 +77,7 @@ jobs:
             throw "Installer not found in build/bin"
           }
 
-          $checksumFile = "build/bin/SHA256SUMS.txt"
+          $checksumFile = "build/bin/SHA256SUMS-windows.txt"
           $hash = Get-FileHash -Path $installer.FullName -Algorithm SHA256
           "$($hash.Hash)  $($installer.Name)" | Out-File -FilePath $checksumFile -Encoding ascii -NoNewline
 
@@ -92,10 +92,98 @@ jobs:
             ${{ steps.files.outputs.installer }}
             ${{ steps.files.outputs.checksum }}
 
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Add Go bin to PATH
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Build Linux app
+        run: bash ./scripts/build-linux.sh --platform linux/amd64
+
+      - name: Collect release files
+        id: files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f "build/bin/scrcpy-gui" ]]; then
+            echo "Linux binary not found at build/bin/scrcpy-gui" >&2
+            exit 1
+          fi
+
+          artifact="build/bin/scrcpy-gui-linux-amd64.tar.gz"
+          tar -C build/bin -czf "$artifact" .
+
+          checksumFile="build/bin/SHA256SUMS-linux.txt"
+          (
+            cd build/bin
+            sha256sum "$(basename "$artifact")" > "$(basename "$checksumFile")"
+          )
+
+          echo "artifact=$artifact" >> "$GITHUB_OUTPUT"
+          echo "checksum=$checksumFile" >> "$GITHUB_OUTPUT"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: |
+            ${{ steps.files.outputs.artifact }}
+            ${{ steps.files.outputs.checksum }}
+
+  publish-release:
+    needs:
+      - build-windows
+      - build-linux
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') && (github.event_name == 'push' || github.event.inputs.publish_release == 'true')
+
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/windows
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-build
+          path: dist/linux
+
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') && (github.event_name == 'push' || github.event.inputs.publish_release == 'true')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ steps.files.outputs.installer }}
-            ${{ steps.files.outputs.checksum }}
+            dist/windows/*
+            dist/linux/*
