@@ -1,0 +1,11 @@
+# Required runtime files for bundle health checks.
+#
+# Lines beginning with # are ignored.
+# Empty lines are ignored.
+#
+# scrcpy.exe and adb.exe are always required implicitly.
+# Add additional required DLLs from your chosen scrcpy distribution below.
+
+AdbWinApi.dll
+AdbWinUsbApi.dll
+SDL2.dll
