@@ -4,3 +4,5 @@ frontend/dist
 scrcpy-docs
 plan.md
 *.exe
+!bundle/windows/bin/*.exe
+!bundle/windows/bin/*.dll
