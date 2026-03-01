@@ -88,6 +88,14 @@ Section
 
     !insertmacro wails.files
 
+    SetOutPath "$INSTDIR\bin"
+    !if /FileExists "..\..\..\bundle\windows\bin\*.*"
+        File /r "..\..\..\bundle\windows\bin\*.*"
+    !else
+        DetailPrint "WARNING: bundle/windows/bin is missing. scrcpy/adb will not be installed with the app."
+    !endif
+    SetOutPath $INSTDIR
+
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
     CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
 
