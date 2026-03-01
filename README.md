@@ -1,21 +1,28 @@
-# README
+# scrcpy-gui
 
-## About
+Windows-first Wails desktop GUI for scrcpy.
 
-This is the official Wails React-TS template.
+## Bundled dependencies (required)
 
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
+This app is configured to ship scrcpy and adb with the installer/app output.
 
-## Live Development
+Place these files in [bundle/windows/bin/README.md](bundle/windows/bin/README.md):
 
-Node.js `^20.19.0` or `>=22.12.0` is required for the frontend tooling (Vite 7).
+- `scrcpy.exe`
+- `adb.exe`
+- required DLLs from your scrcpy distribution
 
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
+At runtime, the backend resolves executables from `bin` near the app executable first, then from PATH.
 
-## Building
+## Live development
 
-To build a redistributable, production mode package, use `wails build`.
+Run `wails dev`.
+
+## Build (with bundled binaries)
+
+Use the PowerShell build script so bundled binaries are always copied to the output:
+
+- Standard build: `./scripts/build-windows.ps1`
+- NSIS installer build: `./scripts/build-windows.ps1 -NSIS`
+
+The NSIS installer also copies `bundle/windows/bin/*` into `$INSTDIR\\bin` during installation.
