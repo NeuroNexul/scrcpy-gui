@@ -42,7 +42,7 @@ function AppBar({ title }: AppBarProps) {
 
   return (
     <header
-      className="drag-region h-8 border-b bg-background select-none flex items-center"
+      className="drag-region h-8 border-b bg-card select-none flex items-center"
       onDoubleClick={handleToggleMaximise}
     >
       <div className="w-full h-full flex items-center justify-between">
