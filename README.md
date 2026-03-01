@@ -109,6 +109,24 @@ Use the provided script to ensure bundled files are copied correctly.
 ./scripts/build-windows.ps1 -NSIS
 ```
 
+## GitHub Actions Release (No Per-Commit Runs)
+
+This repository includes a release workflow at [.github/workflows/release-windows.yml](.github/workflows/release-windows.yml).
+
+It is intentionally configured to run only:
+
+- on tag pushes matching `v*` (example: `v1.0.0`)
+- when manually triggered from the Actions tab (`workflow_dispatch`)
+
+It does **not** run on normal branch commits.
+
+Workflow output:
+
+- builds a Windows NSIS installer
+- generates `SHA256SUMS.txt`
+- uploads both as workflow artifacts
+- publishes a GitHub Release automatically on tag builds
+
 What the script does:
 
 1. Validates `bundle/windows/bin/scrcpy.exe` and `bundle/windows/bin/adb.exe`
